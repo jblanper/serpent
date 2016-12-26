@@ -18,25 +18,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
 
-import os, unicurses, time, random
+import os, time, random
+if os.name == 'nt':
+    import unicurse as curses
+else:
+    import curses
 
 def conf_screen(screen):
-    '''configure unicurses.'''
+    '''configure curses.'''
     
-    unicurses.noecho() # don't output keys on screen
-    unicurses.cbreak() # don't wait to key press
+    curses.noecho() # don't output keys on screen
+    curses.cbreak() # don't wait to key press
     screen.keypad(1) # can use some special values, like KEY_RIGHT
     screen.nodelay(1) # If yes is 1, getch() will be non-blocking.
-    unicurses.curs_set(0)  # hide cursor
+    curses.curs_set(0)  # hide cursor
     #screen.border() # set border
 
 def end_screen(screen):
     '''set default conf of terminal and end curses.'''
     
-    unicurses.nocbreak()
+    curses.nocbreak()
     screen.keypad(0)
-    unicurses.echo()
-    unicurses.endwin()
+    curses.echo()
+    curses.endwin()
     os.system('cls')
 
 # greetings screen
@@ -55,10 +59,10 @@ def set_initial_screen(block):
     message = 'Press "b" to begin playing.'
 
     while True:
-        g_screen = unicurses.newwin(23, 45, 1, 1)
+        g_screen = curses.newwin(23, 45, 1, 1)
         g_screen.border(block, block, block, block, block, block, block, block)
         for i, v in enumerate(title):
-            g_screen.addstr(7 + i, 5, v, unicurses.A_REVERSE)
+            g_screen.addstr(7 + i, 5, v, curses.A_REVERSE)
         g_screen.addstr(15, 9, message)
         
         key = g_screen.getch()
@@ -70,9 +74,9 @@ def set_game_over_screen(block):
     '''GAME OVER screen.'''
     
     while True:
-        pause_screen = unicurses.newwin(7, 22, 7, 12)
+        pause_screen = curses.newwin(7, 22, 7, 12)
         pause_screen.border(block, block, block, block, block, block, block, block)
-        pause_screen.addstr(2, 6, 'GAME OVER', unicurses.A_REVERSE)
+        pause_screen.addstr(2, 6, 'GAME OVER', curses.A_REVERSE)
         pause_screen.addstr(4, 3, 'Type "q" to exit')
         pause_screen.refresh()
         
@@ -104,9 +108,9 @@ def check_hit(head_coord, fruit_char, body_char, window):
     height, width = window.getmaxyx()
     init_y, init_x = window.getbegyx()
     
-    if window.inch(y, x) == ord(fruit_char) + unicurses.color_pair(2) + unicurses.A_BLINK:
+    if window.inch(y, x) == ord(fruit_char) + curses.color_pair(2) + curses.A_BLINK:
         return 'fruit'
-    if window.inch(y, x) == ord(body_char) + unicurses.color_pair(1):
+    if window.inch(y, x) == ord(body_char) + curses.color_pair(1):
         return 'collision'
     if y == height - 1 or y == init_y -1 or x == width - 1 or x == init_x - 1:
         return 'collision'
@@ -129,14 +133,14 @@ def set_fruit_coord(window):
 def main():
     #initiate screen
     os.system("mode con cols=47 lines=25")
-    screen = unicurses.initscr()
-    unicurses.start_color()
+    screen = curses.initscr()
+    curses.start_color()
     conf_screen(screen)
     
     # color pairs
-    block = unicurses.ACS_BLOCK
-    unicurses.init_pair(1, unicurses.COLOR_BLACK, unicurses.COLOR_GREEN)
-    unicurses.init_pair(2, unicurses.COLOR_BLACK, unicurses.COLOR_RED)
+    block = curses.ACS_BLOCK
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
     
     # Variables
     score = 0
@@ -154,7 +158,7 @@ def main():
     
     while True:
         # print window and score board
-        game_screen = unicurses.newwin(23, 45, 1, 1)
+        game_screen = curses.newwin(23, 45, 1, 1)
         game_screen.border(block, block, block, block, block, block, block, block)
         game_screen.addstr(22, 3, ' Score: ' + str(score) + ' ')
         
@@ -162,25 +166,25 @@ def main():
         key = screen.getch()
         if key == ord('q') or hit == 'collision':
             break
-        if key == unicurses.KEY_RIGHT and head_coord[0] != 'w':
+        if key == curses.KEY_RIGHT and head_coord[0] != 'w':
             head_coord[0] = 'e'
-        if key == unicurses.KEY_LEFT and head_coord[0] != 'e':
+        if key == curses.KEY_LEFT and head_coord[0] != 'e':
             head_coord[0] = 'w'
-        if key == unicurses.KEY_UP and head_coord[0] != 's':
+        if key == curses.KEY_UP and head_coord[0] != 's':
             head_coord[0] = 'n'
-        if key == unicurses.KEY_DOWN and head_coord[0] != 'n':
+        if key == curses.KEY_DOWN and head_coord[0] != 'n':
             head_coord[0] = 's'
         
         # print snake
         head_coord, body_coord, grow_count = move(head_coord, body_coord, grow_count)
-        game_screen.addstr(head_coord[1][0], head_coord[1][1], head_char, unicurses.color_pair(1) + unicurses.A_BLINK)
+        game_screen.addstr(head_coord[1][0], head_coord[1][1], head_char, curses.color_pair(1) + curses.A_BLINK)
         for (y, x) in body_coord:
-            game_screen.addstr(y, x, body_char, unicurses.color_pair(1))
+            game_screen.addstr(y, x, body_char, curses.color_pair(1))
         
         # print fruit
         if not fruit_coord:
             fruit_coord = set_fruit_coord(game_screen)
-        game_screen.addstr(fruit_coord[0], fruit_coord[1], fruit_char, unicurses.color_pair(2) + unicurses.A_BLINK)
+        game_screen.addstr(fruit_coord[0], fruit_coord[1], fruit_char, curses.color_pair(2) + curses.A_BLINK)
         
         # refresch window, check hit and check if fruit
         game_screen.refresh()
