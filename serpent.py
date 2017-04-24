@@ -18,11 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
 
-import os, time, random
-if os.name == 'nt':
-    import unicurse as curses
-else:
-    import curses
+import os, time, random, curses
 
 def conf_screen(screen):
     '''configure curses.'''
